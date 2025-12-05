@@ -1,73 +1,217 @@
-# Welcome to your Lovable project
+# MediClinic - Medical Clinic Management System 🏥
 
-## Project info
+نظام إدارة عيادة طبية متكامل مع واجهة أمامية (React + TypeScript) وخادم خلفي (Node.js + Express + Prisma).
 
-**URL**: https://lovable.dev/projects/626f7db4-a8f8-4b91-b422-b64cc8ee598c
+## ✨ المميزات
 
-## How can I edit this code?
+- 🔐 نظام مصادقة كامل (JWT)
+- 👨‍⚕️ إدارة الأطباء والموظفين
+- 👥 إدارة المرضى والملفات الطبية
+- 📋 إدارة الزيارات والفحوصات
+- 💊 إدارة الأدوية والمخزون
+- 📊 لوحة تحكم شاملة مع إحصائيات
+- 💰 تتبع الديون والمدفوعات
+- 📈 حساب رواتب الأطباء تلقائياً
 
-There are several ways of editing your application.
+## 🛠️ التقنيات المستخدمة
 
-**Use Lovable**
+### Frontend
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- React Router
+- React Query
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/626f7db4-a8f8-4b91-b422-b64cc8ee598c) and start prompting.
+### Backend
+- Node.js
+- Express.js
+- Prisma ORM
+- SQLite (قابل للترقية إلى PostgreSQL/MySQL)
+- JWT Authentication
+- bcryptjs
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📦 بنية المشروع
 
-**Use your preferred IDE**
+```
+DR2/
+├── src/                    # Frontend (React)
+│   ├── components/         # مكونات React
+│   ├── pages/             # صفحات التطبيق
+│   ├── contexts/          # Context API
+│   └── types/             # TypeScript Types
+├── server/                # Backend (Node.js)
+│   ├── src/
+│   │   ├── routes/        # API Routes
+│   │   ├── middleware/    # Express Middleware
+│   │   └── utils/         # Utilities
+│   └── prisma/            # Database Schema
+└── public/                # ملفات ثابتة
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 البدء السريع
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. استنساخ المشروع
 
-Follow these steps:
+```bash
+git clone https://github.com/Basil-Aladra/drapp.git
+cd drapp
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2. إعداد Backend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+cd server
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# إنشاء ملف .env
+echo "PORT=3001" > .env
+echo 'DATABASE_URL="file:./dev.db"' >> .env
+echo 'JWT_SECRET="your-secret-key"' >> .env
+echo "NODE_ENV=development" >> .env
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# إعداد قاعدة البيانات
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+
+# تشغيل الخادم
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+الخادم سيعمل على: `http://localhost:3001`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 3. إعداد Frontend
 
-**Use GitHub Codespaces**
+```bash
+# العودة للمجلد الرئيسي
+cd ..
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# تثبيت المكتبات
+npm install
 
-## What technologies are used for this project?
+# تشغيل التطبيق
+npm run dev
+```
 
-This project is built with:
+التطبيق سيعمل على: `http://localhost:8080`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🔑 بيانات الدخول الافتراضية
 
-## How can I deploy this project?
+بعد تشغيل `npm run db:seed` في مجلد server:
 
-Simply open [Lovable](https://lovable.dev/projects/626f7db4-a8f8-4b91-b422-b64cc8ee598c) and click on Share -> Publish.
+- **المدير (Admin)**
+  - Email: `admin@clinic.com`
+  - Password: `admin123`
 
-## Can I connect a custom domain to my Lovable project?
+- **الطبيب (Doctor)**
+  - Email: `sarah@clinic.com`
+  - Password: `doctor123`
 
-Yes, you can!
+## 📡 API Endpoints
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Authentication
+- `POST /api/auth/login` - تسجيل الدخول
+- `POST /api/auth/register` - تسجيل طبيب جديد
+- `GET /api/auth/me` - معلومات المستخدم الحالي
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Patients
+- `GET /api/patients` - جميع المرضى
+- `POST /api/patients` - إضافة مريض
+- `GET /api/patients/:id` - مريض محدد
+- `PUT /api/patients/:id` - تحديث مريض
+- `DELETE /api/patients/:id` - حذف مريض
+
+### Visits
+- `GET /api/visits` - جميع الزيارات
+- `POST /api/visits` - إضافة زيارة
+- `PUT /api/visits/:id` - تحديث زيارة
+- `DELETE /api/visits/:id` - حذف زيارة
+
+### Medications
+- `GET /api/medications` - جميع الأدوية
+- `POST /api/medications` - إضافة دواء
+- `PUT /api/medications/:id` - تحديث دواء
+- `DELETE /api/medications/:id` - حذف دواء
+
+### Doctors
+- `GET /api/users/doctors` - جميع الأطباء
+- `PUT /api/users/doctors/:id` - تحديث معلومات طبيب
+- `PUT /api/users/doctors/:id/shift-rates` - تحديث أسعار التحولات
+
+### Dashboard
+- `GET /api/dashboard/stats` - إحصائيات Dashboard
+
+## 📚 التوثيق
+
+- [دليل الإعداد الكامل - Backend](server/SETUP_GUIDE_AR.md)
+- [بدء سريع - Backend](server/QUICK_START_AR.md)
+- [تعليمات - Backend](server/INSTRUCTIONS_AR.md)
+- [Backend README (English)](server/README.md)
+
+## 🔧 التطوير
+
+### تشغيل في وضع التطوير
+
+**Terminal 1 - Backend:**
+```bash
+cd server
+npm run dev
+```
+
+**Terminal 2 - Frontend:**
+```bash
+npm run dev
+```
+
+### بناء للإنتاج
+
+**Backend:**
+```bash
+cd server
+npm start
+```
+
+**Frontend:**
+```bash
+npm run build
+npm run preview
+```
+
+## 📝 ملاحظات مهمة
+
+- قاعدة البيانات SQLite مخزنة محلياً في `server/prisma/dev.db`
+- ملف `.env` مطلوب في مجلد `server` لتشغيل الخادم
+- لا ترفع ملف `.env` على GitHub (مضاف في `.gitignore`)
+- قاعدة البيانات SQLite يمكن ترقيتها لـ PostgreSQL/MySQL بسهولة
+
+## 🗄️ قاعدة البيانات
+
+المشروع يستخدم Prisma ORM مع SQLite. للترقية إلى PostgreSQL أو MySQL:
+
+1. غيّر `provider` في `server/prisma/schema.prisma`
+2. حدّث `DATABASE_URL` في `.env`
+3. نفّذ `npm run db:migrate`
+
+## 🤝 المساهمة
+
+المساهمات مرحب بها! يرجى فتح Pull Request أو Issue.
+
+## 📄 الترخيص
+
+ISC
+
+## 👤 المؤلف
+
+[Basil Aladra](https://github.com/Basil-Aladra)
+
+## 🔗 الروابط
+
+- **المستودع:** https://github.com/Basil-Aladra/drapp
+- **Backend API:** http://localhost:3001/api
+- **Frontend:** http://localhost:8080
+
+---
+
+**تم بناء هذا المشروع باستخدام ❤️**
