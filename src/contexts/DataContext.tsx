@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Patient, Visit, Medication, User } from '@/types';
 
 interface DataContextType {
@@ -129,6 +129,44 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [visits, setVisits] = useState<Visit[]>(initialVisits);
   const [medications, setMedications] = useState<Medication[]>(initialMedications);
   const [doctors, setDoctors] = useState<User[]>(initialDoctors);
+  // Use Vite env var `VITE_API_BASE` when available. `process` is undefined in the browser.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const API_BASE: string = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:4000';
+
+  // Load data from backend if available; fallback to initial in-memory data
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [pRes, vRes, mRes, dRes] = await Promise.all([
+          fetch(`${API_BASE}/api/patients`),
+          fetch(`${API_BASE}/api/visits`),
+          fetch(`${API_BASE}/api/medications`),
+          fetch(`${API_BASE}/api/doctors`),
+        ]);
+
+        if (pRes.ok) {
+          const pdata = await pRes.json();
+          setPatients(pdata.map((p: any) => ({ ...p, dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth) : undefined, createdAt: p.createdAt ? new Date(p.createdAt) : undefined })));
+        }
+        if (vRes.ok) {
+          const vdata = await vRes.json();
+          setVisits(vdata.map((v: any) => ({ ...v, date: v.date ? new Date(v.date) : undefined, createdAt: v.createdAt ? new Date(v.createdAt) : undefined })));
+        }
+        if (mRes.ok) {
+          const mdata = await mRes.json();
+          setMedications(mdata);
+        }
+        if (dRes.ok) {
+          const ddata = await dRes.json();
+          setDoctors(ddata.map((d: any) => ({ ...d, createdAt: d.createdAt ? new Date(d.createdAt) : undefined })));
+        }
+      } catch (err) {
+        // backend not available; use initial in-memory data
+        console.warn('Backend not available, using in-memory initial data');
+      }
+    };
+    load();
+  }, []);
 
   const calculateTotalSalary = (d: User) => {
     const rates = d.shiftRates || {};
@@ -144,13 +182,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addPatient = (patient: Omit<Patient, 'id' | 'createdAt' | 'totalDebt'>) => {
-    const newPatient: Patient = {
-      ...patient,
-      id: Date.now().toString(),
-      totalDebt: 0,
-      createdAt: new Date(),
-    };
-    setPatients([...patients, newPatient]);
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/patients`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patient) });
+        if (res.ok) {
+          const created = await res.json();
+          created.dateOfBirth = created.dateOfBirth ? new Date(created.dateOfBirth) : undefined;
+          created.createdAt = created.createdAt ? new Date(created.createdAt) : undefined;
+          setPatients([...patients, created]);
+          return;
+        }
+      } catch (err) {
+        // fallback to in-memory
+      }
+      const newPatient: Patient = {
+        ...patient,
+        id: Date.now().toString(),
+        totalDebt: 0,
+        createdAt: new Date(),
+      };
+      setPatients([...patients, newPatient]);
+    })();
   };
 
   const updatePatient = (id: string, patientData: Partial<Patient>) => {
@@ -162,24 +214,50 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addVisit = (visit: Omit<Visit, 'id' | 'createdAt'>) => {
-    const newVisit: Visit = {
-      ...visit,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-    };
-    setVisits([...visits, newVisit]);
-    
-    // Update patient debt
-    if (!visit.isPaid) {
-      const debt = visit.totalAmount - visit.paidAmount;
-      updatePatient(visit.patientId, {
-        totalDebt: getPatientDebt(visit.patientId) + debt,
-      });
-    }
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/visits`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visit) });
+        if (res.ok) {
+          const created = await res.json();
+          created.date = created.date ? new Date(created.date) : undefined;
+          created.createdAt = created.createdAt ? new Date(created.createdAt) : undefined;
+          setVisits([...visits, created]);
+          // refresh patients to reflect updated debt
+          try {
+            const pRes = await fetch(`${API_BASE}/api/patients`);
+            if (pRes.ok) {
+              const pdata = await pRes.json();
+              setPatients(pdata.map((p: any) => ({ ...p, dateOfBirth: p.dateOfBirth ? new Date(p.dateOfBirth) : undefined, createdAt: p.createdAt ? new Date(p.createdAt) : undefined })));
+            }
+          } catch {}
+          if (visit.shiftType) {
+            incrementDoctorShiftCount(visit.doctorId, visit.shiftType);
+          }
+          return;
+        }
+      } catch (err) {
+        // fallback to in-memory behaviour below
+      }
 
-    if (visit.shiftType) {
-      incrementDoctorShiftCount(visit.doctorId, visit.shiftType);
-    }
+      const newVisit: Visit = {
+        ...visit,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+      };
+      setVisits([...visits, newVisit]);
+      
+      // Update patient debt
+      if (!visit.isPaid) {
+        const debt = visit.totalAmount - visit.paidAmount;
+        updatePatient(visit.patientId, {
+          totalDebt: getPatientDebt(visit.patientId) + debt,
+        });
+      }
+
+      if (visit.shiftType) {
+        incrementDoctorShiftCount(visit.doctorId, visit.shiftType);
+      }
+    })();
   };
 
   const updateVisit = (id: string, visitData: Partial<Visit>) => {
@@ -187,12 +265,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addMedication = (medication: Omit<Medication, 'id' | 'createdAt'>) => {
-    const newMedication: Medication = {
-      ...medication,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-    };
-    setMedications([...medications, newMedication]);
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/medications`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(medication) });
+        if (res.ok) {
+          const created = await res.json();
+          created.createdAt = created.createdAt ? new Date(created.createdAt) : new Date();
+          setMedications([...medications, created]);
+          return;
+        }
+      } catch (err) {
+        // fallback
+      }
+      const newMedication: Medication = {
+        ...medication,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+      };
+      setMedications([...medications, newMedication]);
+    })();
   };
 
   const updateMedication = (id: string, medicationData: Partial<Medication>) => {
@@ -204,16 +295,39 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addDoctor = (doctor: Omit<User, 'id' | 'createdAt'>): User => {
-    const newDoctor: User = {
+    // Try to persist to backend, fallback to in-memory and return created
+    let createdDoctor: User;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/doctors`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(doctor) });
+        if (res.ok) {
+          const created = await res.json();
+          created.createdAt = created.createdAt ? new Date(created.createdAt) : new Date();
+          setDoctors([...doctors, created]);
+          createdDoctor = created;
+          return created;
+        }
+      } catch (err) {
+        // fallback
+      }
+      const newDoctor: User = {
+        ...doctor,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+        shiftRates: doctor.role === 'doctor' ? {} : undefined,
+        shiftCounts: doctor.role === 'doctor' ? {} : undefined,
+        totalSalary: doctor.role === 'doctor' ? 0 : undefined,
+      };
+      setDoctors([...doctors, newDoctor]);
+      createdDoctor = newDoctor;
+      return newDoctor;
+    })();
+    // return a placeholder; the real created object will be appended asynchronously
+    return ({
       ...doctor,
       id: Date.now().toString(),
       createdAt: new Date(),
-      shiftRates: doctor.role === 'doctor' ? {} : undefined,
-      shiftCounts: doctor.role === 'doctor' ? {} : undefined,
-      totalSalary: doctor.role === 'doctor' ? 0 : undefined,
-    };
-    setDoctors([...doctors, newDoctor]);
-    return newDoctor;
+    } as User);
   };
 
   const updateDoctor = (id: string, doctorData: Partial<User>) => {

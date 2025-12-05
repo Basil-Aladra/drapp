@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  role          String   // 'admin' or 'doctor'
+  specialization String?
+  phone         String?
+  shiftRates    String?  // JSON string: {"A": 100, "B": 150}
+  shiftCounts   String?  // JSON string: {"A": 10, "B": 5}
+  totalSalary   Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  patients      Patient[]
+  visits        Visit[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Patient {
+  id              String   @id @default(uuid())
+  name            String
+  dateOfBirth     DateTime
+  phone           String?
+  address         String?
+  bloodType       String?
+  allergies       String?
+  chronicDiseases String?
+  totalDebt       Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  ownerDoctorId   String?
+  ownerDoctor     User?    @relation(fields: [ownerDoctorId], references: [id], onDelete: SetNull)
+  visits          Visit[]
+
+  @@index([name])
+  @@index([ownerDoctorId])
+  @@map("patients")
+}
+
+model Medication {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  dosageForm  String   // 'tablet', 'syrup', 'injection', 'cream', 'drops', 'capsule', 'other'
+  stock       Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@map("medications")
+}
+
+model Visit {
+  id                    String   @id @default(uuid())
+  patientId             String
+  patientName           String
+  doctorId              String
+  date                  DateTime
+  shiftType             String?
+  allergies             Boolean  @default(false)
+  allergyDetails        String?
+  chronicDiseases       String?
+  bloodType             String?
+  weight                Float?
+  temperature           Float?
+  oxygenLevel           Float?
+  bloodPressureSystolic Int?
+  bloodPressureDiastolic Int?
+  heartRate             Int?
+  diagnosis             String
+  totalAmount           Float    @default(0)
+  paidAmount            Float    @default(0)
+  isPaid                Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  patient               Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor                User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  prescriptions         PrescriptionMedication[]
+  tests                 TestOrder[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+  @@map("visits")
+}
+
+model PrescriptionMedication {
+  id            String   @id @default(uuid())
+  visitId       String
+  medicationId  String
+  medicationName String
+  quantity      Int
+  dosage        String
+  instructions  String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  visit         Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+  @@index([medicationId])
+  @@map("prescription_medications")
+}
+
+model TestOrder {
+  id        String   @id @default(uuid())
+  visitId   String
+  testName  String
+  result    String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+  @@map("test_orders")
+}
+

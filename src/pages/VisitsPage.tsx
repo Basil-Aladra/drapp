@@ -42,6 +42,8 @@ export default function VisitsPage() {
     weight: '',
     temperature: '',
     oxygenLevel: '',
+    bloodPressureSystolic: '',
+    bloodPressureDiastolic: '',
     heartRate: '',
     diagnosis: '',
     totalAmount: '',
@@ -114,6 +116,8 @@ export default function VisitsPage() {
         weight: newVisit.weight ? parseFloat(newVisit.weight) : undefined,
         temperature: newVisit.temperature ? parseFloat(newVisit.temperature) : undefined,
         oxygenLevel: newVisit.oxygenLevel ? parseFloat(newVisit.oxygenLevel) : undefined,
+        bloodPressureSystolic: newVisit.bloodPressureSystolic ? parseFloat(newVisit.bloodPressureSystolic) : undefined,
+        bloodPressureDiastolic: newVisit.bloodPressureDiastolic ? parseFloat(newVisit.bloodPressureDiastolic) : undefined,
         heartRate: newVisit.heartRate ? parseFloat(newVisit.heartRate) : undefined,
         diagnosis: newVisit.diagnosis,
         medications: selectedMedications,
@@ -131,6 +135,8 @@ export default function VisitsPage() {
         weight: '',
         temperature: '',
         oxygenLevel: '',
+        bloodPressureSystolic: '',
+        bloodPressureDiastolic: '',
         heartRate: '',
         diagnosis: '',
         totalAmount: '',
@@ -182,10 +188,6 @@ export default function VisitsPage() {
             <div class="info-item">
               <div class="info-label">Visit Date</div>
               <div>${format(new Date(visit.date), 'MMMM dd, yyyy')}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Blood Type</div>
-              <div>${visit.bloodType || 'N/A'}</div>
             </div>
           </div>
           <div>
@@ -396,6 +398,29 @@ export default function VisitsPage() {
                         value={newVisit.heartRate}
                         onChange={(e) => setNewVisit({ ...newVisit, heartRate: e.target.value })}
                         placeholder="e.g., 72"
+                        className="input-medical"
+                      />
+                    </div>
+                    {/* Blood Pressure Inputs (disabled for doctors) */}
+                    <div className="space-y-2">
+                      <Label htmlFor="bloodPressureSystolic">BP Systolic</Label>
+                      <Input
+                        id="bloodPressureSystolic"
+                        type="number"
+                        value={newVisit.bloodPressureSystolic}
+                        onChange={(e) => setNewVisit({ ...newVisit, bloodPressureSystolic: e.target.value })}
+                        placeholder="e.g., 120"
+                        className="input-medical"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bloodPressureDiastolic">BP Diastolic</Label>
+                      <Input
+                        id="bloodPressureDiastolic"
+                        type="number"
+                        value={newVisit.bloodPressureDiastolic}
+                        onChange={(e) => setNewVisit({ ...newVisit, bloodPressureDiastolic: e.target.value })}
+                        placeholder="e.g., 80"
                         className="input-medical"
                       />
                     </div>

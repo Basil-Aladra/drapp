@@ -129,9 +129,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts and Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="w-full grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Visits */}
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6 animate-fade-in">
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6 animate-fade-in w-full">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">

@@ -41,6 +41,8 @@ export interface Visit {
   weight?: number;
   temperature?: number;
   oxygenLevel?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
   heartRate?: number;
   diagnosis: string;
   medications: PrescriptionMedication[];
